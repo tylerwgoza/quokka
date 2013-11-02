@@ -4,11 +4,11 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
+    <meta name="description" content="Quokka CMS, Content management system with Flask and MongoDB">
     <meta name="author" content="Nilton OS">
     <link rel="shortcut icon" href="images/favicon.ico">
 
-    <title>Quokka CMS</title>
+    <title>Quokka CMS - The happiest CMS in the world</title>
 
     <!-- Bootstrap core CSS -->
     <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
@@ -24,22 +24,32 @@
     <!-- Custom styles for this template -->
     <link href="bootstrap/css/carousel.css" rel="stylesheet">
 
-          <script type="text/javascript">//<![CDATA[
-            // Google Analytics
-            var _gaq = _gaq || [];
-            _gaq.push(['_setAccount', 'UA-0000000-X']);
-                    _gaq.push(['_trackPageview']);
-            (function () {
-                var ga = document.createElement('script');
-                ga.type = 'text/javascript';
-                ga.async = true;
-                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	  <script type="text/javascript">//<![CDATA[
+	    // Google Analytics
+	    // var _gaq = _gaq || [];
+	    // _gaq.push(['_setAccount', 'UA-45369544-1']);
+	    // 	    _gaq.push(['_trackPageview']);
+	    // (function () {
+	    // 	var ga = document.createElement('script');
+	    // 	ga.type = 'text/javascript';
+	    // 	ga.async = true;
+	    // 	ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
 
-                var s = document.getElementsByTagName('script')[0];
-                s.parentNode.insertBefore(ga, s);
-            })();
-            //]]></script>
+	    // 	var s = document.getElementsByTagName('script')[0];
+	    // 	s.parentNode.insertBefore(ga, s);
+	    // })();
+	    //]]>
+	  </script>
 
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45369544-1', 'quokkaproject.org');
+  ga('send', 'pageview');
+</script>
   </head>
 <!-- NAVBAR
 ================================================== -->
@@ -48,33 +58,33 @@
     <div class="navbar-wrapper">
       <div class="container">
 
-        <div class="navbar navbar-default navbar-fixed-top">
-          <div class="container">
-            <div class="navbar-header">
-              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-              </button>
-              <a class="navbar-brand" href="http://quokkaproject.org" target="_blank">Qokka CMS</a>
-            </div>
-            <div class="navbar-collapse collapse">
-              <ul class="nav navbar-nav">
-                <li class="active"><a href="https://github.com/pythonhub/quokka" target="_blank">Source Code</a></li>
-                <li><a href="https://github.com/pythonhub/quokka/wiki" target="_blank">Wiki</a></li>
-                <li><a href="https://github.com/pythonhub/quokka/graphs/contributors" target="_blank">Contributors</a></li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Development <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="https://github.com/pythonhub/quokka/blob/master/quokka/contrib/scripts/setup-quokka-nginx-uwsgi-ubuntu.sh" target="_blank">Setup Ubuntu</a></li>
-                    <li><a href="https://github.com/pythonhub/quokka/blob/master/quokka/contrib/scripts/setup-quokka-nginx-uwsgi-opensuse.sh" target="_blank">Setup OpenSUSE</a></li>
-                    <li><a href="https://github.com/pythonhub/quokka/issues" target="_blank">Bugs/Features</a></li>
-                  </ul>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
+	<div class="navbar navbar-default navbar-fixed-top">
+	  <div class="container">
+	    <div class="navbar-header">
+	      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+		<span class="icon-bar"></span>
+		<span class="icon-bar"></span>
+		<span class="icon-bar"></span>
+	      </button>
+	      <a class="navbar-brand" href="http://quokkaproject.org" target="_blank">Qokka CMS</a>
+	    </div>
+	    <div class="navbar-collapse collapse">
+	      <ul class="nav navbar-nav">
+		<li class="active"><a href="https://github.com/pythonhub/quokka" target="_blank">Source Code</a></li>
+		<li><a href="https://github.com/pythonhub/quokka/wiki" target="_blank">Wiki</a></li>
+		<li><a href="https://github.com/pythonhub/quokka/graphs/contributors" target="_blank">Contributors</a></li>
+		<li class="dropdown">
+		  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Development <b class="caret"></b></a>
+		  <ul class="dropdown-menu">
+		    <li><a href="https://github.com/pythonhub/quokka/blob/master/quokka/contrib/scripts/setup-quokka-nginx-uwsgi-ubuntu.sh" target="_blank">Setup Ubuntu</a></li>
+		    <li><a href="https://github.com/pythonhub/quokka/blob/master/quokka/contrib/scripts/setup-quokka-nginx-uwsgi-opensuse.sh" target="_blank">Setup OpenSUSE</a></li>
+		    <li><a href="https://github.com/pythonhub/quokka/issues" target="_blank">Bugs/Features</a></li>
+		  </ul>
+		</li>
+	      </ul>
+	    </div>
+	  </div>
+	</div>
 
       </div>
     </div>
@@ -85,50 +95,50 @@
     <div id="myCarousel" class="carousel slide" data-ride="carousel">
       <!-- Indicators -->
       <ol class="carousel-indicators">
-        <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
-        <li data-target="#myCarousel" data-slide-to="1"></li>
-        <li data-target="#myCarousel" data-slide-to="2"></li>
+	<li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+	<li data-target="#myCarousel" data-slide-to="1"></li>
+	<li data-target="#myCarousel" data-slide-to="2"></li>
       </ol>
       <div class="carousel-inner">
-          <div class="item active">
-          <img data-src="holder.js/900x500/auto/#777:#7a7a7a/text:Third slide" alt="Third slide">
-          <div class="container">
-            <div class="carousel-caption">
-            <h1>Flask and MongoDB powered CMS</h1>
-              <p>
-              <img src="https://raw.github.com/pythonhub/quokka/master/docs/logo.png" alt="..."></p>
-              <p><a class="btn btn-lg btn-default" href="https://github.com/pythonhub/quokka/archive/master.zip" role="button">Download</a></p>
-            </div>
-          </div>
-        </div>
+	  <div class="item active">
+	  <img data-src="holder.js/900x500/auto/#777:#7a7a7a/text:Third slide" alt="Third slide">
+	  <div class="container">
+	    <div class="carousel-caption">
+	    <h1>Flask and MongoDB powered CMS</h1>
+	      <p>
+	      <img src="https://raw.github.com/pythonhub/quokka/master/docs/logo.png" alt="..."></p>
+	      <p><a class="btn btn-lg btn-default" href="https://github.com/pythonhub/quokka/archive/master.zip" role="button">Download</a></p>
+	    </div>
+	  </div>
+	</div>
 
-        <div class="item">
-          <img data-src="holder.js/900x500/auto/#777:#7a7a7a/text:First slide" alt="First slide">
-          <div class="container">
-            <div class="carousel-caption">
-              <h1>Quokka CMS</h1>
-              <p>Quokka is a flexible content management platform powered by Python, Flask and MongoDB.
+	<div class="item">
+	  <img data-src="holder.js/900x500/auto/#777:#7a7a7a/text:First slide" alt="First slide">
+	  <div class="container">
+	    <div class="carousel-caption">
+	      <h1>Quokka CMS</h1>
+	      <p>Quokka is a flexible content management platform powered by Python, Flask and MongoDB.
 Quokka provides a "full-stack" Flask application plus a bunch of selected extensions to provide all the needed CMS admin features and a flexible-easy way to extend the platform with quokka-modules built following the Flask Blueprints pattern.</p>
-              <p><a class="btn btn-lg btn-default" href="http://demo.quokkaproject.org/" target="_blank" role="button">Try the Demo Quokka CMS</a></p>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <img data-src="holder.js/900x500/auto/#777:#7a7a7a/text:Second slide" alt="Second slide">
-          <div class="container">
-            <div class="carousel-caption">
-              <h1>Current features</h1>
-              <p>Customizable admin interface
+	      <p><a class="btn btn-lg btn-default" href="http://demo.quokkaproject.org/" target="_blank" role="button">Try the Demo Quokka CMS</a></p>
+	    </div>
+	  </div>
+	</div>
+	<div class="item">
+	  <img data-src="holder.js/900x500/auto/#777:#7a7a7a/text:Second slide" alt="Second slide">
+	  <div class="container">
+	    <div class="carousel-caption">
+	      <h1>Current features</h1>
+	      <p>Customizable admin interface
     Export data to json or csv
     Channel based content organization with multi-level unlimited nested channels (MPTT)
     Beauty urls and SMART-SLUG
     Default basic website theme based on zurb.foundation css framework
     Extensible with Flask Blueprints modules
 </p>
-              <p><a class="btn btn-lg btn-default" href="https://github.com/pythonhub/quokka/wiki/about" target="_blank" role="button">Learn more</a></p>
-            </div>
-          </div>
-        </div>
+	      <p><a class="btn btn-lg btn-default" href="https://github.com/pythonhub/quokka/wiki/about" target="_blank" role="button">Learn more</a></p>
+	    </div>
+	  </div>
+	</div>
 
       </div>
 
@@ -160,8 +170,8 @@ Quokka provides a "full-stack" Flask application plus a bunch of selected extens
 
       <!-- FOOTER -->
       <footer>
-        <p class="pull-right"><a href="#">Back to top</a></p>
-        <p>Flask powered CMS on top of mongoengine/MongoDB</p>
+	<p class="pull-right"><a href="#">Back to top</a></p>
+	<p>Flask powered CMS on top of mongoengine/MongoDB</p>
       </footer>
 
     </div><!-- /.container -->
