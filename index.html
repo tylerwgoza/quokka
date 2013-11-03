@@ -24,6 +24,7 @@
 
     <!-- Custom styles for this template -->
     <link href="bootstrap/css/carousel.css" rel="stylesheet">
+    <link href="social-likes/social-likes.css" rel="stylesheet">
 
 
 	<script>
@@ -155,7 +156,7 @@ Quokka provides a "full-stack" Flask application plus a bunch of selected extens
 
       <hr class="featurette-divider">
       
-      <p>Media management<img class="featurette-image img-responsive" src="images/media.png" alt="media"></p>
+      <p><h2>Media management</h2><img class="featurette-image img-responsive" src="images/media.png" alt="media"></p>
 
 
       <hr class="featurette-divider">
@@ -171,8 +172,12 @@ Quokka provides a "full-stack" Flask application plus a bunch of selected extens
 
       <!-- FOOTER -->
       <footer>
-	<p class="pull-right"><a href="#">Back to top</a></p>
-	<p>Flask powered CMS on top of mongoengine/MongoDB</p>
+      	<ul class="social-likes">
+      	  <li class="plusone" title="Share link on Google+">+1</li>
+      	  <li class="facebook" title="Share link on Facebook">Share</li>
+	      <li class="twitter" title="Share link on Twitter">Twitter</li>
+        </ul>
+	    <p class="pull-right"><a href="#">Flask and MongoDB powered CMS <span class="glyphicon glyphicon-chevron-up"></span></a></p>
       </footer>
 
     </div><!-- /.container -->
@@ -184,5 +189,6 @@ Quokka provides a "full-stack" Flask application plus a bunch of selected extens
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
     <script src="bootstrap/js/bootstrap.min.js"></script>
     <script src="bootstrap/js/holder.js"></script>
+    <script src="social-likes/social-likes.min.js"></script>
   </body>
 </html>
