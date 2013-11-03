@@ -24,7 +24,8 @@
 
     <!-- Custom styles for this template -->
     <link href="bootstrap/css/carousel.css" rel="stylesheet">
-    <link href="social-likes/social-likes.css" rel="stylesheet">
+    <link href="socialcount/socialcount.css" rel="stylesheet">
+	<link href="socialcount/socialcount-icons.css" rel="stylesheet">
 
 
 	<script>
@@ -52,20 +53,20 @@
 		<span class="icon-bar"></span>
 		<span class="icon-bar"></span>
 	      </button>
-	      <a class="navbar-brand" href="http://quokkaproject.org">Quokka CMS</a>
 	    </div>
 	    <div class="navbar-collapse collapse">
 	      <ul class="nav navbar-nav">
-		<li class="active"><a href="https://github.com/pythonhub/quokka" target="_blank">Source Code</a></li>
+                <li class="active"><a href="https://github.com/pythonhub/quokka" target="_blank"><img src="images/logo.png" style="height: 17px;"></a></li>
 		<li><a href="http://demo.quokkaproject.org" target="_blank">Demo</a></li>
 		<li><a href="https://github.com/pythonhub/quokka/wiki" target="_blank">Wiki</a></li>
-		<li><a href="https://github.com/pythonhub/quokka/graphs/contributors" target="_blank">Contributors</a></li>
 		<li class="dropdown">
 		  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Development <b class="caret"></b></a>
 		  <ul class="dropdown-menu">
+                    <li><a href="https://groups.google.com/forum/#!forum/quokka-developers" target="_blank">Forum</a></li>
+                    <li><a href="https://github.com/pythonhub/quokka/graphs/contributors" target="_blank">Contributors</a></li>
 		    <li><a href="https://github.com/pythonhub/quokka/blob/master/quokka/contrib/scripts/setup-quokka-nginx-uwsgi-ubuntu.sh" target="_blank">Setup Ubuntu</a></li>
 		    <li><a href="https://github.com/pythonhub/quokka/blob/master/quokka/contrib/scripts/setup-quokka-nginx-uwsgi-opensuse.sh" target="_blank">Setup OpenSUSE</a></li>
-		    <li><a href="https://github.com/pythonhub/quokka/issues" target="_blank">Bugs/Features</a></li>
+		    <li><a href="https://github.com/pythonhub/quokka/issues" target="_blank">Bugs|Features</a></li>
 		  </ul>
 		</li>
 	      </ul>
@@ -172,13 +173,28 @@ Quokka provides a "full-stack" Flask application plus a bunch of selected extens
 
       <!-- FOOTER -->
       <footer>
-      	<ul class="social-likes">
-      	  <li class="plusone" title="Share link on Google+">+1</li>
-      	  <li class="facebook" title="Share link on Facebook">Share</li>
-	      <li class="twitter" title="Share link on Twitter">Twitter</li>
+        <ul class="socialcount" data-url="http://quokkaproject.org/" data-counts="true" data-share-text="http://quokkaproject.org/">
+	      <li class="facebook">
+	      <a href="https://www.facebook.com/sharer/sharer.php?u=http://quokkaproject.org/" title="Share">
+	      <span class="social-icon icon-facebook"></span>
+	      <span class="count">Like</span></a>
+	      </li>
+	      <li class="twitter">
+	      <a href="https://twitter.com/intent/tweet?text=http://quokkaproject.org/" title="Share">
+	      <span class="social-icon icon-twitter"></span>
+	      <span class="count">Tweet</span></a>
+	      </li>
+	      <li class="googleplus">
+	      <a href="https://plus.google.com/share?url=http://quokkaproject.org/" title="Share">
+	      <span class="social-icon icon-googleplus"></span>
+	      <span class="count">+1</span></a>
+	      </li>
+	      <li class="pull-right">
+	      <a href="#">Flask and MongoDB powered CMS <span class="glyphicon glyphicon-chevron-up">
+	      </span></a></li>
         </ul>
-	    <p class="pull-right"><a href="#">Flask and MongoDB powered CMS <span class="glyphicon glyphicon-chevron-up"></span></a></p>
       </footer>
+
 
     </div><!-- /.container -->
 
@@ -189,6 +205,6 @@ Quokka provides a "full-stack" Flask application plus a bunch of selected extens
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
     <script src="bootstrap/js/bootstrap.min.js"></script>
     <script src="bootstrap/js/holder.js"></script>
-    <script src="social-likes/social-likes.min.js"></script>
+    <script src="socialcount/socialcount.js"></script>
   </body>
 </html>
