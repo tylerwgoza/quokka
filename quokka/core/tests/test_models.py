@@ -1,7 +1,15 @@
 # coding: utf-8
-from . import BaseTestCase
+import sys
 
-from ..models import Channel, Config, CustomValue
+from . import BaseTestCase
+from quokka.core.models.channel import Channel
+from quokka.modules.accounts.models import User
+from quokka.core.db import db
+from quokka.core.models.config import Config
+from quokka.core.models.custom_values import CustomValue
+
+if sys.version_info.major == 3:
+    unicode = lambda x: u'{}'.format(x)  # flake8: noqa  # noqa
 
 
 class TestChannel(BaseTestCase):
@@ -21,6 +29,7 @@ class TestChannel(BaseTestCase):
     def tearDown(self):
         self.channel.delete()
         self.parent.delete()
+        User.objects.all().delete()
 
     def test_channel_fields(self):
         self.assertEqual(self.channel.title, u'Monkey Island')
@@ -60,6 +69,16 @@ class TestChannel(BaseTestCase):
         self.assertEqual(self.parent.get_canonical_url(),
                          '/father/')
 
+    def test_get_authors_without_created_by_should_raise_exception(self):
+        user = User.createuser(
+            u'Lechuck',
+            'lechuck@monkeyisland.com',
+            'guybrushsucks',
+        )
+        self.channel.authors = [user]
+        with self.assertRaises(db.ValidationError):
+            self.channel.get_authors()
+
 
 class TestConfig(BaseTestCase):
     def setUp(self):
@@ -77,7 +96,7 @@ class TestConfig(BaseTestCase):
 
     def test_config_fields(self):
         self.assertEqual(self.config.group, u'test')
-        self.assertEqual(self.config.content_format, 'html')
+        self.assertEqual(self.config.content_format, 'markdown')
         self.assertFalse(self.config.published)
         self.assertTrue(self.config.values.count(), 1)
         self.assertEqual(unicode(self.config), u'test')

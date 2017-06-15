@@ -9,7 +9,8 @@ class MultipleObjectsReturned(Exception):
 
 
 def match_all(i, kwargs):
-    return all([getattr(i, k) == v for k, v in kwargs.items()])
+    # use generator expression?
+    return all(getattr(i, k) == v for k, v in kwargs.items())
 
 
 def getinstance(_instance):
@@ -40,6 +41,7 @@ def _filter(self):
 def _get(self):
     def inner(*args, **kwargs):
         values = only_matches(self, kwargs)
+        values = list(values)
         if len(values) > 1:
             raise MultipleObjectsReturned("More than one object returned")
         return values and values[0]
@@ -65,8 +67,8 @@ def _delete(self):
 def _create(self):
     def inner(*args, **kwargs):
         instance = self._instance
-        Item = instance._fields[self._name].field.document_type_obj
-        item = Item(**kwargs)
+        item_cls = instance._fields[self._name].field.document_type_obj
+        item = item_cls(**kwargs)
         self.append(item)
         instance.save()
         return item
@@ -119,6 +121,10 @@ class FilteredList(BaseList):
 
 
 class ListField(fields.ListField):
+
+    validators = []  # should be removed when flask.mongoengine updates
+    filters = []  # should be removed ""
+
     def __get__(self, *args, **kwargs):
         value = super(ListField, self).__get__(*args, **kwargs)
         inject(value)

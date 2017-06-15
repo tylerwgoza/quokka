@@ -1,8 +1,13 @@
 # coding: utf-8
+import sys
+
 from quokka.core.tests import BaseTestCase
-from quokka.core.models import Channel
+from quokka.core.models.channel import Channel
 
 from ..models import Post
+
+if sys.version_info.major == 3:
+    unicode = str
 
 
 class TestPost(BaseTestCase):
@@ -16,6 +21,7 @@ class TestPost(BaseTestCase):
             "channel": self.channel,
             "tags": ["tag1", "tag2", "tag3"],
             "published": True,
+            "content_format": "html"
         }
         self.post_dict2 = {
             "title": "This is a nice post",

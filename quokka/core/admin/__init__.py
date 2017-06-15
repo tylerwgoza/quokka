@@ -1,42 +1,40 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
-
-import logging
 from werkzeug.utils import import_string
-from flask import request, session
-from flask.ext.admin import Admin
 
-from ..models import (Link, Config, SubContentPurpose, ChannelType,
-                      ContentTemplateType, Channel)
+from flask_admin import Admin
+
+from quokka.core.models.subcontent import SubContentPurpose
+from quokka.core.models.config import Config
+from quokka.core.models.channel import Channel, ChannelType
+from quokka.core.models.content import Link, ContentTemplateType
+
+from quokka.utils.translation import _l, _n
+from quokka.utils.settings import get_setting_value
 
 from .models import ModelAdmin, FileAdmin, BaseIndexView
 from .views import (IndexView, InspectorView, LinkAdmin, ConfigAdmin,
                     SubContentPurposeAdmin, ChannelTypeAdmin,
                     ContentTemplateTypeAdmin, ChannelAdmin)
 
-from .utils import _, _l, _n
-
 '''
 _n is here only for backwards compatibility, to be imported by 3rd party
 modules. The below _n below is to avoid pep8 error
 '''
-_n
-
-logger = logging.getLogger()
+_n  # noqa
 
 
 class QuokkaAdmin(Admin):
+    registered = []
+
     def register(self, model, view=None, *args, **kwargs):
-        View = view or ModelAdmin
-        self.add_view(View(model, *args, **kwargs))
-        # try:
-        #     self.add_view(View(model, *args, **kwargs))
-        # except Exception as e:
-        #     logger.warning(
-        #         "admin.register({0}, {1}, {2}, {3}) error: {4}".format(
-        #             model, view, args, kwargs, e.message
-        #         )
-        #     )
+        _view = view or ModelAdmin
+        admin_view_exclude = get_setting_value('ADMIN_VIEW_EXCLUDE', [])
+        identifier = '.'.join((model.__module__, model.__name__))
+        if (identifier not in admin_view_exclude) and (
+                identifier not in self.registered):
+            self.add_view(_view(model, *args, **kwargs))
+            self.registered.append(identifier)
 
 
 def create_admin(app=None):
@@ -44,7 +42,7 @@ def create_admin(app=None):
     return QuokkaAdmin(app, index_view=index_view)
 
 
-def configure_admin(app, admin):
+def configure_admin(app, admin):  # noqa
 
     custom_index = app.config.get('ADMIN_INDEX_VIEW')
     if custom_index:
@@ -53,7 +51,7 @@ def configure_admin(app, admin):
             del admin._views[0]
         admin._views.insert(0, admin.index_view)
 
-    ADMIN = app.config.get(
+    admin_config = app.config.get(
         'ADMIN',
         {
             'name': 'Quokka Admin',
@@ -61,23 +59,8 @@ def configure_admin(app, admin):
         }
     )
 
-    for k, v in list(ADMIN.items()):
+    for k, v in list(admin_config.items()):
         setattr(admin, k, v)
-
-    babel = app.extensions.get('babel')
-    if babel:
-        try:
-            @babel.localeselector
-            def get_locale():
-                override = request.args.get('lang')
-
-                if override:
-                    session['lang'] = override
-
-                return session.get('lang', 'en')
-            admin.locale_selector(get_locale)
-        except:
-            pass  # Exception: Can not add locale_selector second time.
 
     for entry in app.config.get('FILE_ADMIN', []):
         try:
@@ -85,17 +68,18 @@ def configure_admin(app, admin):
                 FileAdmin(
                     entry['path'],
                     entry['url'],
-                    name=entry['name'],
-                    category=entry['category'],
+                    name=_l(entry['name']),
+                    category=_l(entry['category']),
                     endpoint=entry['endpoint'],
-                    roles_accepted=entry.get('roles_accepted')
+                    roles_accepted=entry.get('roles_accepted'),
+                    editable_extensions=entry.get('editable_extensions')
                 )
             )
-        except:
-            pass  # TODO: check blueprint endpoisnt colision
+        except Exception as e:
+            app.logger.info(e)
 
     # register all themes in file manager
-    for k, theme in app.theme_manager.themes.iteritems():
+    for k, theme in app.theme_manager.themes.items():
         try:
 
             if k == app.config.get('DEFAULT_THEME'):
@@ -111,9 +95,11 @@ def configure_admin(app, admin):
                     "/_themes/{0}/".format(theme.identifier),
                     name="{0}: {1} static files".format(suffix,
                                                         theme.identifier),
-                    category="Files",
+                    category=_l("Files"),
                     endpoint="{0}_static_files".format(theme.identifier),
-                    roles_accepted=('admin', "editor")
+                    roles_accepted=('admin', "editor"),
+                    editable_extensions=app.config.get(
+                        'DEFAULT_EDITABLE_EXTENSIONS')
                 )
             )
             admin.add_view(
@@ -122,16 +108,22 @@ def configure_admin(app, admin):
                     "/theme_template_files/{0}/".format(theme.identifier),
                     name="{0}: {1} template files".format(suffix,
                                                           theme.identifier),
-                    category="Files",
+                    category=_l("Files"),
                     endpoint="{0}_template_files".format(theme.identifier),
-                    roles_accepted=('admin', "editor")
+                    roles_accepted=('admin', "editor"),
+                    editable_extensions=app.config.get(
+                        'DEFAULT_EDITABLE_EXTENSIONS')
                 )
             )
-        except:
-            pass
+        except Exception as e:
+            app.logger.warning(
+                'Error registering %s folder to file admin %s' % (
+                    theme.identifier, e
+                )
+            )
 
     # adding views
-    admin.add_view(InspectorView(category=_("Settings"),
+    admin.add_view(InspectorView(category=_l("Settings"),
                                  name=_l("Inspector")))
 
     # adding extra views
@@ -139,7 +131,7 @@ def configure_admin(app, admin):
     for view in extra_views:
         admin.add_view(
             import_string(view['module'])(
-                category=_(view.get('category')),
+                category=_l(view.get('category')),
                 name=_l(view.get('name'))
             )
         )
@@ -148,25 +140,25 @@ def configure_admin(app, admin):
     admin.register(
         Link,
         LinkAdmin,
-        category=_("Content"),
+        category=_l("Content"),
         name=_l("Link")
     )
     admin.register(Config,
                    ConfigAdmin,
-                   category=_("Settings"),
+                   category=_l("Settings"),
                    name=_l("Config"))
     admin.register(SubContentPurpose,
                    SubContentPurposeAdmin,
-                   category=_("Settings"),
+                   category=_l("Settings"),
                    name=_l("Sub content purposes"))
     admin.register(ChannelType, ChannelTypeAdmin,
-                   category=_("Settings"), name=_l("Channel type"))
+                   category=_l("Settings"), name=_l("Channel type"))
     admin.register(ContentTemplateType,
                    ContentTemplateTypeAdmin,
-                   category=_("Settings"),
+                   category=_l("Settings"),
                    name=_l("Template type"))
     admin.register(Channel, ChannelAdmin,
-                   category=_("Content"), name=_l("Channel"))
+                   category=_l("Content"), name=_l("Channel"))
 
     # avoid registering twice
     if admin.app is None:

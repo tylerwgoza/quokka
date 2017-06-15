@@ -23,11 +23,14 @@
 """
 from datetime import datetime
 
-#from werkzeug.utils import escape
+# from werkzeug.utils import escape
 from werkzeug.wrappers import BaseResponse
 from werkzeug._compat import implements_to_string, string_types
 
-escape = lambda x: x
+
+def escape(x):
+    return x
+
 
 XHTML_NAMESPACE = 'http://www.w3.org/1999/xhtml'
 
@@ -151,7 +154,7 @@ class AtomFeed(object):
             len(self.entries)
         )
 
-    def generate(self):
+    def generate(self):  # noqa
         """Return a generator that yields pieces of XML."""
         # atom demands either an author element in every entry or a global one
         if not self.author:

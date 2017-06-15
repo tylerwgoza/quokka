@@ -1,7 +1,8 @@
 # coding: utf-8
 import uuid
 from quokka.core.db import db
-from quokka.core.models import Publishable
+from quokka.core.models.signature import Publishable
+from quokka.utils.settings import get_setting_value
 
 
 class BaseComment(object):
@@ -37,6 +38,11 @@ class Comment(Publishable, BaseComment, db.Document):
 
     def __unicode__(self):
         return u"{0} - {1}...".format(self.author_name, self.body[:15])
+
+    def get_canonical_url(self):
+        return "/{0}.{1}".format(
+            self.path, get_setting_value('CONTENT_EXTENSION', 'html')
+        ) if not self.path.startswith("/") else self.path
 
     meta = {
         "ordering": ['-created_at'],

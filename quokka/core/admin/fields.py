@@ -1,14 +1,17 @@
-#coding: utf-8
+# coding: utf-8
 import random
+import sys
 
 from werkzeug.datastructures import FileStorage
 from flask import current_app
-from flask.ext.admin import form
-from flask.ext.admin.form.upload import ImageUploadInput
-from flask.ext.admin._compat import urljoin
+from flask_admin import form
+from flask_admin.form.upload import ImageUploadInput
 
-from quokka.core.models import SubContent, SubContentPurpose
+from quokka.core.models.subcontent import SubContent, SubContentPurpose
 from quokka.modules.media.models import Image
+
+if sys.version_info.major == 3:
+    unicode = lambda x: u'{}'.format(x)  # noqa  # flake8: noqa
 
 
 class ThumbWidget(ImageUploadInput):
@@ -17,15 +20,18 @@ class ThumbWidget(ImageUploadInput):
                      ' <img %(image)s>'
                      '</div>')
 
-    def get_url(self, field):
-        if field.thumbnail_size:
-            filename = field.thumbnail_fn(field.data)
-        else:
-            filename = field.data
-
-        if field.url_relative_path:
-            filename = urljoin(field.url_relative_path, filename)
-
+    @staticmethod
+    def get_url(field):
+        '''
+        This meethod is not used, but is here for compatibility
+        '''
+        # if field.thumbnail_size:
+        #     filename = field.thumbnail_fn(field.data)
+        # else:
+        #     filename = field.data
+        #
+        # if field.url_relative_path:
+        #     filename = urljoin(field.url_relative_path, filename)
         return field.data
 
 
@@ -35,7 +41,7 @@ class ThumbField(form.ImageUploadField):
 
 class ImageUploadField(form.ImageUploadField):
     def is_file_allowed(self, filename):
-        extensions = self.allowed_extensions
+        extensions = self.allowed_extensions  # noqa
         if isinstance(extensions, (str, unicode)) and extensions.isupper():
             items = current_app.config.get(extensions, extensions)
             merged_items = [

@@ -1,53 +1,39 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import warnings
+from flask.exthook import ExtDeprecationWarning
+warnings.simplefilter("ignore", category=ExtDeprecationWarning)
+# The above hack is needed because flask_mongoengine and flask_cache
+# Did not migrated from old flask.ext style
 
-VERSION = (0, 2, 0)
+from quokka.core.admin import create_admin  # noqa
+from quokka.core.app import QuokkaApp  # noqa
+from quokka.core.middleware import HTTPMethodOverrideMiddleware  # noqa
+from quokka.ext import configure_extensions, configure_extension  # noqa
 
-__version__ = ".".join(map(str, VERSION))
-__status__ = "Alpha"
-__description__ = "Flexible & modular CMS powered by Flask and MongoDB"
-__author__ = "Bruno Rocha <rochacbruno@gmail.com>"
-__email__ = "quokka-developers@googlegroups.com"
-__license__ = "MIT License"
-__copyright__ = "Copyright 2013, Quokka Project / PythonHub.com"
+admin = create_admin()
 
-import os
-try:
-    from .core.admin import create_admin
-    from .core.app import QuokkaApp
-    # from .core.middleware import HTTPMethodOverrideMiddleware
 
-    admin = create_admin()
-except:
-    # Fix setup install:
-    # If new environment not return error
-    pass
+def create_app_base(config=None, test=False, admin_instance=None,
+                    ext_list=None, **settings):
+    app = QuokkaApp('quokka')
+    app.config.load_quokka_config(config=config, test=test, **settings)
+    if test or app.config.get('TESTING'):
+        app.testing = True
+    if ext_list:
+        for ext in ext_list:
+            configure_extension(ext, app=app)
+    return app
 
 
 def create_app(config=None, test=False, admin_instance=None, **settings):
-    app = QuokkaApp('quokka')
-    app.config.from_object(config or 'quokka.settings')
-    mode = os.environ.get('MODE', 'local')
-    if test:
-        mode = 'test'
-    try:
-        app.config.from_object('quokka.%s_settings' % mode)
-    except ImportError:
-        pass
+    app = create_app_base(
+        config=config, test=test, admin_instance=admin_instance, **settings
+    )
 
-    app.config.update(settings)
-
-    if not test:
-        app.config.from_envvar("QUOKKA_SETTINGS", silent=True)
-    else:
-        app.config.from_envvar("QUOKKATEST_SETTINGS", silent=True)
-
-    # testing trick
-    # with app.test_request_context():
-    from .ext import configure_extensions
     configure_extensions(app, admin_instance or admin)
-
-    # app.wsgi_app = HTTPMethodOverrideMiddleware(app.wsgi_app)
+    if app.config.get("HTTP_PROXY_METHOD_OVERRIDE"):
+        app.wsgi_app = HTTPMethodOverrideMiddleware(app.wsgi_app)
     return app
 
 
@@ -60,14 +46,14 @@ def create_celery_app(app=None):
     app = app or create_app()
     celery = Celery(__name__, broker=app.config['CELERY_BROKER_URL'])
     celery.conf.update(app.config)
-    TaskBase = celery.Task
+    taskbase = celery.Task
 
-    class ContextTask(TaskBase):
+    class ContextTask(taskbase):
         abstract = True
 
         def __call__(self, *args, **kwargs):
             with app.app_context():
-                return TaskBase.__call__(self, *args, **kwargs)
+                return taskbase.__call__(self, *args, **kwargs)
 
     celery.Task = ContextTask
     return celery

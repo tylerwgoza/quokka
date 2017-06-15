@@ -3,8 +3,8 @@
 
 from flask import request
 from flask.views import MethodView
-from flask.ext.mongoengine.wtf import model_form
-from flask.ext.security import current_user
+from flask_mongoengine.wtf import model_form
+from flask_security import current_user
 from quokka.core.templates import render_template
 from .models import Comment
 
@@ -16,7 +16,8 @@ class CommentView(MethodView):
         only=['author_name', 'author_email', 'body']
     )
 
-    def render_context(self, path, form):
+    @staticmethod
+    def render_context(path, form):
         comments = Comment.objects(path=path, published=True)
         return render_template('content/comments.html',
                                comments=comments,
@@ -32,8 +33,7 @@ class CommentView(MethodView):
         if form.validate():
             comment = Comment(path=path)
             form.populate_obj(comment)
-            if current_user.is_authenticated():
-                # TODO: logic to auto publish comments
+            if current_user.is_authenticated:
                 comment.published = True
                 comment.author_name = current_user.name
                 comment.author_email = current_user.email

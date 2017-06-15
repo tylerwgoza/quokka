@@ -1,7 +1,7 @@
 # coding utf-8
 
 from flask import session
-from flask.ext.oauthlib.client import OAuth
+from flask_oauthlib.client import OAuth
 
 from quokka.modules.accounts.oauth import make_oauth_handler, oauth_login
 
@@ -42,7 +42,7 @@ def configure(app):
     }
     """
 
-    app.add_url_rule(
+    app.add_quokka_url_rule(
         '/accounts/oauth/login/<provider>/',
         'oauth_login',
         oauth_login
@@ -61,13 +61,12 @@ def configure(app):
             **{k: v for k, v in data.items() if not k.startswith("_")}
         )
 
-        oauth_app.tokengetter(
-            lambda: session.get("oauth_" + provider + "_token")
-        )
+        token_var = "oauth_{}_token".format(provider)
+        oauth_app.tokengetter(lambda: session.get(token_var))
 
         setattr(app, provider_name, oauth_app)
 
-        app.add_url_rule(
+        app.add_quokka_url_rule(
             '/accounts/oauth/authorized/{0}/'.format(provider),
             '{0}_authorized'.format(provider),
             oauth_app.authorized_handler(make_oauth_handler(provider))

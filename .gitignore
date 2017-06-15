@@ -5,6 +5,8 @@
 *.so
 
 # Packages
+.idea
+*.idea
 *.egg
 *.egg-info
 dist
@@ -18,6 +20,9 @@ develop-eggs
 .installed.cfg
 lib
 lib64
+
+# Pyenv
+.python-version
 
 # Installer logs
 pip-log.txt
@@ -41,3 +46,22 @@ media/*
 .mr.developer.cfg
 .project
 .pydevproject
+
+# VIM
+.ropeproject
+*.swp
+
+quokka/mediafiles
+etc/elasticdata/elasticsearch
+etc/mongodata/journal
+etc/mongodata/_tmp
+etc/mongodata/*.0
+etc/mongodata/*.ns
+etc/mongodata/*.lock
+etc/mongodata/*.bson
+etc/mongodata/*.wt
+etc/mongodata/WiredTiger*
+etc/mongodata/*.data
+*.log
+*.pid
+*.cache*

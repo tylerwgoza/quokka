@@ -1,15 +1,10 @@
 # coding: utf-8
 import os
 import importlib
-import random
-import logging
-from flask.ext.script import Command
+from quokka.ext.commands_collector import CommandsCollector
 
-logger = logging.getLogger()
-
-
-def load_from_packages(app):
-    pass
+# def load_from_packages(app):
+#     pass
 
 
 def load_from_folder(app):
@@ -33,71 +28,42 @@ def load_from_folder(app):
     dir_list = os.listdir(path)
     mods = {}
     object_name = app.config.get('BLUEPRINTS_OBJECT_NAME', 'module')
+    module_file = app.config.get('BLUEPRINTS_MODULE_NAME', 'main')
+    blueprint_module = module_file + '.py'
     for fname in dir_list:
         if not os.path.exists(os.path.join(path, fname, 'DISABLED')) and  \
                 os.path.isdir(os.path.join(path, fname)) and \
-                os.path.exists(os.path.join(path, fname, '__init__.py')):
+                os.path.exists(os.path.join(path, fname, blueprint_module)):
 
             # register blueprint object
-            module_name = ".".join([base_module_name, fname])
+            module_root = ".".join([base_module_name, fname])
+            module_name = ".".join([module_root, module_file])
             mods[fname] = importlib.import_module(module_name)
             blueprint = getattr(mods[fname], object_name)
-
-            if not blueprint.name in app.blueprints:
-                app.register_blueprint(blueprint)
-            else:
-                blueprint.name += str(random.getrandbits(8))
-                app.register_blueprint(blueprint)
-                logger.warning(
-                    "CONFLICT:{0} already registered, using {1}".format(
-                        fname, blueprint.name
-                    )
-                )
+            app.logger.info("registering blueprint: %s" % blueprint.name)
+            app.register_blueprint(blueprint)
 
             # register admin
             try:
-                importlib.import_module(".".join([module_name, 'admin']))
-            except ImportError:
-                logger.info(
-                    "{0} module does not define admin".format(fname)
+                importlib.import_module(".".join([module_root, 'admin']))
+            except ImportError as e:
+                app.logger.info(
+                    "%s module does not define admin or error: %s", fname, e
                 )
 
-    logger.info("{0} modules loaded".format(mods.keys()))
+    app.logger.info("%s modules loaded", mods.keys())
 
 
-def load_blueprint_commands(manager):
-    app = manager.app
-    blueprints_path = app.config.get('BLUEPRINTS_PATH', 'modules')
-    path = os.path.join(
-        app.config.get('PROJECT_ROOT', '..'),
-        blueprints_path
+def get_blueprint_commands(path, root, app_name):
+    modules_path = os.path.join(root, path)
+    base_module_name = ".".join([app_name, path])
+    cmds = CommandsCollector(modules_path, base_module_name)
+    return cmds
+
+
+def blueprint_commands(app=None):
+    return get_blueprint_commands(
+        path=app.config.get('BLUEPRINTS_PATH', 'modules'),
+        root=app.config.get('PROJECT_ROOT', '..'),
+        app_name=app.name
     )
-    base_module_name = ".".join([app.name, blueprints_path])
-    dir_list = os.listdir(path)
-    mods = {}
-    for fname in dir_list:
-        if not os.path.exists(os.path.join(path, fname, 'DISABLED')) and  \
-                os.path.isdir(os.path.join(path, fname)) and \
-                os.path.exists(os.path.join(path, fname, '__init__.py')):
-
-            # register management commands
-            module_name = ".".join([base_module_name, fname])
-            try:
-                mod = importlib.import_module(
-                    ".".join([module_name, 'commands'])
-                )
-                mods[fname] = mod
-                for obj_name in dir(mod):
-                    obj = getattr(mod, obj_name)
-                    if obj_name != 'Command' and type(obj) == type and \
-                            issubclass(obj, Command):
-                        name = getattr(obj, 'command_name', obj_name.lower())
-                        if name in manager._commands:
-                            name += str(random.getrandbits(8))
-                            logger.info("registering command {0}".format(name))
-                        manager.add_command(name, obj())
-            except ImportError:
-                logger.info(
-                    "{0} module does not define commands".format(fname)
-                )
-    logger.info("{0} management commands loaded".format(mods.keys()))

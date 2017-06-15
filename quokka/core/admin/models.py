@@ -3,29 +3,29 @@ import json
 import random
 import datetime
 
-from flask.ext.admin.contrib.mongoengine import ModelView
-from flask.ext.admin.contrib.fileadmin import FileAdmin as _FileAdmin
-from flask.ext.admin.babel import gettext, ngettext
-from flask.ext.admin import AdminIndexView
-from flask.ext.admin import BaseView as AdminBaseView
-from flask.ext.admin.actions import action
-from flask.ext.admin import helpers as h
-from flask.ext.security import current_user
-from flask.ext.security.utils import url_for_security
 from flask import redirect, flash, url_for, Response, current_app
 
-from flask.ext.htmlbuilder import html
+from flask_admin.contrib.mongoengine import ModelView
+from flask_admin.contrib.fileadmin import FileAdmin as _FileAdmin
+from flask_admin.babel import gettext, ngettext
+from flask_admin import AdminIndexView
+from flask_admin import BaseView as AdminBaseView
+from flask_admin.actions import action
+from flask_admin import helpers as h
+from flask_security import current_user
+from flask_security.utils import url_for_security
+from flask_htmlbuilder.htmlbuilder import html
 
 from quokka.modules.accounts.models import User
 from quokka.core.templates import render_template
 from quokka.core.widgets import PrepopulatedText
 from quokka.core.admin.fields import ContentImageField
 from quokka.utils.upload import dated_path, lazy_media_path
-from quokka.utils import lazy_str_setting
+from quokka.utils import is_accessible
+from quokka.utils.settings import get_setting_value
 
-from .fields import ThumbField
-
-from .utils import _, _l, _n
+from quokka.core.admin.fields import ThumbField
+from quokka.core.admin.utils import _, _l, _n
 
 
 class ThemeMixin(object):
@@ -39,7 +39,7 @@ class ThemeMixin(object):
         kwargs['h'] = h
         # Contribute extra arguments
         kwargs.update(self._template_args)
-        theme = current_app.config.get('ADMIN_THEME', None)
+        theme = current_app.config.get('ADMIN_THEME')
         return render_template(template, theme=theme, **kwargs)
 
 
@@ -47,15 +47,10 @@ class Roled(object):
 
     def is_accessible(self):
         roles_accepted = getattr(self, 'roles_accepted', None)
-        if roles_accepted:
-            accessible = any(
-                [current_user.has_role(role) for role in roles_accepted]
-            )
-            return accessible
-        return True
+        return is_accessible(roles_accepted=roles_accepted, user=current_user)
 
-    def _handle_view(self, name, *args, **kwargs):
-        if not current_user.is_authenticated():
+    def _handle_view(self, *args, **kwargs):
+        if not current_user.is_authenticated:
             return redirect(url_for_security('login', next="/admin"))
         if not self.is_accessible():
             return self.render("admin/denied.html")
@@ -68,12 +63,16 @@ def format_datetime(self, request, obj, fieldname, *args, **kwargs):
 
 
 def view_on_site(self, request, obj, fieldname, *args, **kwargs):
-    endpoint = kwargs.pop('endpoint', 'detail')
+    available = obj.is_available
+    endpoint = kwargs.pop(
+        'endpoint',
+        'quokka.core.detail' if available else 'quokka.core.preview'
+    )
     return html.a(
         href=obj.get_absolute_url(endpoint),
         target='_blank',
     )(html.i(class_="icon icon-eye-open", style="margin-right: 5px;")(),
-      _l('View on site'))
+      _l('View on site') if available else _l('Preview on site'))
 
 
 def format_ul(self, request, obj, fieldname, *args, **kwars):
@@ -84,6 +83,14 @@ def format_ul(self, request, obj, fieldname, *args, **kwars):
     placeholder = _args.get('placeholder', u"{i}")
     lis = [html.li(placeholder.format(item=item)) for item in field]
     return ul(*lis)
+
+
+def format_link(self, request, obj, fieldname, *args, **kwars):
+    value = getattr(obj, fieldname)
+    return html.a(href=value, title=value, target='_blank')(
+        html.i(class_="icon  icon-resize-small",
+               style="margin-right: 5px;")()
+    )
 
 
 def format_status(self, request, obj, fieldname, *args, **kwargs):
@@ -100,7 +107,7 @@ def format_status(self, request, obj, fieldname, *args, **kwargs):
 def get_url(self, request, obj, fieldname, *args, **kwargs):
     column_formatters_args = getattr(self, 'column_formatters_args', {})
     _args = column_formatters_args.get('get_url', {}).get(fieldname, {})
-    attribute = _args.get('attribute', None)
+    attribute = _args.get('attribute')
     method = _args.get('method', 'get_absolute_url')
     text = getattr(obj, fieldname, '')
     if attribute:
@@ -114,8 +121,10 @@ def get_url(self, request, obj, fieldname, *args, **kwargs):
 
 
 class FileAdmin(ThemeMixin, Roled, _FileAdmin):
+
     def __init__(self, *args, **kwargs):
-        self.roles_accepted = kwargs.pop('roles_accepted')
+        self.roles_accepted = kwargs.pop('roles_accepted', list())
+        self.editable_extensions = kwargs.pop('editable_extensions', tuple())
         super(FileAdmin, self).__init__(*args, **kwargs)
 
 
@@ -128,7 +137,8 @@ class ModelAdmin(ThemeMixin, Roled, ModelView):
         'view_on_site': view_on_site,
         'ul': format_ul,
         'status': format_status,
-        'get_url': get_url
+        'get_url': get_url,
+        'link': format_link
     }
     column_formatters_args = {}
 
@@ -141,6 +151,39 @@ class ModelAdmin(ThemeMixin, Roled, ModelView):
         except self.model.DoesNotExist:
             flash(_("Item not found %(i)s", i=i), "error")
 
+    @action('export_to_json', _l('Export as json'))
+    def export_to_json(self, ids):
+        qs = self.model.objects(id__in=ids)
+
+        return Response(
+            qs.to_json(),
+            mimetype="text/json",
+            headers={
+                "Content-Disposition":
+                "attachment;filename=%s.json" % self.model.__name__.lower()
+            }
+        )
+
+    @action('export_to_csv', _l('Export as csv'))
+    def export_to_csv(self, ids):
+        qs = json.loads(self.model.objects(id__in=ids).to_json())
+
+        def generate():
+            yield ','.join(list(max(qs, key=lambda x: len(x)).keys())) + '\n'
+            for item in qs:
+                yield ','.join([str(i) for i in list(item.values())]) + '\n'
+
+        return Response(
+            generate(),
+            mimetype="text/csv",
+            headers={
+                "Content-Disposition":
+                "attachment;filename=%s.csv" % self.model.__name__.lower()
+            }
+        )
+
+
+class PublishActions(object):
     @action(
         'toggle_publish',
         _l('Publish/Unpublish'),
@@ -157,6 +200,8 @@ class ModelAdmin(ThemeMixin, Roled, ModelView):
                  count,
                  count=count))
 
+
+class ContentActions(object):
     @action(
         'clone_item',
         _l('Create a copy'),
@@ -180,37 +225,6 @@ class ModelAdmin(ThemeMixin, Roled, ModelView):
         new.save()
         return redirect(url_for('.edit_view', id=new.id))
 
-    @action('export_to_json', _l('Export as json'))
-    def export_to_json(self, ids):
-        qs = self.model.objects(id__in=ids)
-
-        return Response(
-            qs.to_json(),
-            mimetype="text/json",
-            headers={
-                "Content-Disposition":
-                "attachment;filename=%s.json" % self.model.__name__.lower()
-            }
-        )
-
-    @action('export_to_csv', _l('Export as csv'))
-    def export_to_csv(self, ids):
-        qs = json.loads(self.model.objects(id__in=ids).to_json())
-
-        def generate():
-            yield ','.join(list(qs[0].keys())) + '\n'
-            for item in qs:
-                yield ','.join([str(i) for i in list(item.values())]) + '\n'
-
-        return Response(
-            generate(),
-            mimetype="text/csv",
-            headers={
-                "Content-Disposition":
-                "attachment;filename=%s.csv" % self.model.__name__.lower()
-            }
-        )
-
 
 class BaseIndexView(Roled, ThemeMixin, AdminIndexView):
     pass
@@ -220,7 +234,7 @@ class BaseView(Roled, ThemeMixin, AdminBaseView):
     pass
 
 
-class BaseContentAdmin(ModelAdmin):
+class BaseContentAdmin(ContentActions, PublishActions, ModelAdmin):
     """
     All attributes added here for example
     more info in admin source
@@ -228,7 +242,7 @@ class BaseContentAdmin(ModelAdmin):
     or Flask-admin documentation
     """
 
-    roles_accepted = ('admin', 'editor')
+    roles_accepted = ('admin', 'editor', 'author')
     can_create = True
     can_edit = True
     can_delete = True
@@ -237,13 +251,16 @@ class BaseContentAdmin(ModelAdmin):
     # edit_template = 'admin/custom/edit.html'
     # create_template = 'admin/custom/create.html'
 
-    column_list = ('title', 'slug', 'channel', 'published', 'created_at',
-                   'available_at', 'view_on_site')
+    column_list = (
+        'title', 'slug', 'channel', 'published', 'created_at',
+        'available_at', 'view_on_site'
+    )
 
     column_formatters = {
         'view_on_site': ModelAdmin.formatters.get('view_on_site'),
         'created_at': ModelAdmin.formatters.get('datetime'),
-        'available_at': ModelAdmin.formatters.get('datetime')
+        'available_at': ModelAdmin.formatters.get('datetime'),
+        'short_url': ModelAdmin.formatters.get('link')
     }
 
     # column_type_formatters = {}
@@ -261,7 +278,7 @@ class BaseContentAdmin(ModelAdmin):
     form_columns = ['title', 'slug', 'channel', 'related_channels', 'summary',
                     'published', 'add_image', 'contents',
                     'show_on_channel', 'available_at', 'available_until',
-                    'tags', 'values', 'template_type']
+                    'tags', 'values', 'template_type', 'license', 'authors']
     # form_excluded_columns = []
     # form = None
     # form_overrides = None
@@ -275,7 +292,7 @@ class BaseContentAdmin(ModelAdmin):
     }
 
     form_args = {
-        #'body': {'widget': TextEditor()},
+        # 'body': {'widget': TextEditor()},
         'slug': {'widget': PrepopulatedText(master='title')}
     }
 
@@ -302,8 +319,8 @@ class BaseContentAdmin(ModelAdmin):
         'add_image': ContentImageField(
             'Add new image',
             base_path=lazy_media_path(),
-            thumbnail_size=lazy_str_setting('MEDIA_IMAGE_THUMB_SIZE',
-                                            default=(100, 100, True)),
+            thumbnail_size=get_setting_value('MEDIA_IMAGE_THUMB_SIZE',
+                                             default=(100, 100, True)),
             endpoint="media",
             namegen=dated_path,
             permission=0o777,
@@ -312,11 +329,16 @@ class BaseContentAdmin(ModelAdmin):
     }
 
     # action_disallowed_list
-
     # page_size = 20
     # form_ajax_refs = {
     #     'main_image': {"fields": ('title',)}
     # }
+
+    def get_list_columns(self):
+        column_list = super(BaseContentAdmin, self).get_list_columns()
+        if get_setting_value('SHORTENER_ENABLED'):
+            column_list += [('short_url', 'Short URL')]
+        return column_list
 
     def after_model_change(self, form, model, is_created):
         if not hasattr(form, 'add_image'):
